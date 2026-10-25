@@ -6,6 +6,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import cl.germain.studymanager.auth.InvalidCredentialsException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,5 +28,10 @@ public class ApiExceptionHandler {
     @ExceptionHandler(EmailAlreadyUsedException.class)
     public ProblemDetail handleEmailAlreadyUsed(EmailAlreadyUsedException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 }
