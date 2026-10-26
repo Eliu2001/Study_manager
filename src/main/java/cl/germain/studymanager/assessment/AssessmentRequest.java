@@ -16,8 +16,7 @@ public record AssessmentRequest(
         @NotNull @DecimalMin("0.01") @DecimalMax("100.00") @Digits(integer = 3, fraction = 2) BigDecimal weight,
         LocalDate dueDate,
         AssessmentStatus status,
-        @DecimalMin("1.0") @DecimalMax("7.0") @Digits(integer = 1, fraction = 1) BigDecimal grade,
-        @Size(max = 5000) String topics,
+        @DecimalMin("1.0") @DecimalMax("7.0") @Digits(integer = 1, fraction = 2) BigDecimal grade,        @Size(max = 5000) String topics,
         @Size(max = 5000) String comment
 ) {
 }

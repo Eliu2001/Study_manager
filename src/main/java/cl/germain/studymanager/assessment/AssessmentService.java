@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.math.RoundingMode;
 
 @Service
 @RequiredArgsConstructor
@@ -95,8 +96,7 @@ public class AssessmentService {
         assessment.setType(request.type());
         assessment.setWeight(request.weight().setScale(2));
         assessment.setDueDate(request.dueDate());
-        assessment.setGrade(request.grade() == null ? null : request.grade().setScale(1));
-        assessment.setStatus(resolveStatus(request));
+        assessment.setGrade(request.grade() == null ? null : request.grade().setScale(1, RoundingMode.DOWN));        assessment.setStatus(resolveStatus(request));
         assessment.setTopics(blankToNull(request.topics()));
         assessment.setComment(blankToNull(request.comment()));
     }
