@@ -16,13 +16,15 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class JwtService {
 
+    public static final String ISSUER = "study-manager";
+
     private final JwtEncoder jwtEncoder;
     private final JwtProperties properties;
 
     public String generateToken(User user) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("study-manager")
+                .issuer(ISSUER)
                 .subject(String.valueOf(user.getId()))
                 .claim("email", user.getEmail())
                 .issuedAt(now)

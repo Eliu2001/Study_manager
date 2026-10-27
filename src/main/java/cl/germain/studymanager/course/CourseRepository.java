@@ -14,4 +14,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     boolean existsByTermIdAndName(Long termId, String name);
 
     boolean existsByTermIdAndNameAndIdNot(Long termId, String name, Long id);
+
+    List<Course> findAllByTermUserIdOrderByNameAsc(Long userId);
 }

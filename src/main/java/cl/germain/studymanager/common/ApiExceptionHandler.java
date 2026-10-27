@@ -1,12 +1,14 @@
 package cl.germain.studymanager.common;
 
 import cl.germain.studymanager.auth.EmailAlreadyUsedException;
+import cl.germain.studymanager.auth.InvalidCredentialsException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import cl.germain.studymanager.auth.InvalidCredentialsException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,6 +25,12 @@ public class ApiExceptionHandler {
                 .forEach(e -> errors.putIfAbsent(e.getField(), e.getDefaultMessage()));
         problem.setProperty("errors", errors);
         return problem;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleUnreadableBody(HttpMessageNotReadableException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Malformed request body or invalid value");
     }
 
     @ExceptionHandler(EmailAlreadyUsedException.class)
@@ -48,5 +56,15 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail handleConflict(ConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /**
+     * Cubre la carrera entre dos peticiones simultaneas que pasan la validacion previa
+     * y chocan despues con una restriccion UNIQUE de la base de datos.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT, "The data conflicts with an existing record");
     }
 }

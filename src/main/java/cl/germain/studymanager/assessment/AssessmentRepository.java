@@ -10,6 +10,10 @@ import java.util.Optional;
 
 public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
 
+    List<Assessment> findAllByCourseTermId(Long termId);
+
+    List<Assessment> findAllByCourseTermUserId(Long userId);
+
     List<Assessment> findAllByCourseIdOrderByDueDateAscIdAsc(Long courseId);
 
     Optional<Assessment> findByIdAndCourseTermUserId(Long id, Long userId);
