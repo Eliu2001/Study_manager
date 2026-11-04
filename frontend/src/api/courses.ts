@@ -20,6 +20,10 @@ export function listCourses(termId: number): Promise<Course[]> {
   return apiFetch<Course[]>(`/api/terms/${termId}/courses`)
 }
 
+export function fetchCourse(id: number): Promise<Course> {
+  return apiFetch<Course>(`/api/courses/${id}`)
+}
+
 export function createCourse(termId: number, data: CourseInput): Promise<Course> {
   return apiFetch<Course>(`/api/terms/${termId}/courses`, { method: 'POST', body: data })
 }

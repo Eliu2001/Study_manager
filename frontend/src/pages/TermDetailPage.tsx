@@ -172,7 +172,11 @@ export function TermDetailPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-medium text-slate-800">{course.name}</h3>
+                      <h3 className="text-lg font-medium">
+                        <Link to={`/courses/${course.id}`} className={linkClass}>
+                          {course.name}
+                        </Link>
+                      </h3>
                       {courseSummary && <StatusBadge status={courseSummary.status} />}
                     </div>
                     <p className="text-sm text-slate-600">

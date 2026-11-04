@@ -28,6 +28,9 @@ export function AppLayout() {
               <NavLink to="/terms" className={navClassName}>
                 Periodos
               </NavLink>
+              <NavLink to="/dates" className={navClassName}>
+                Fechas
+              </NavLink>
             </nav>
           </div>
           <div className="flex items-center gap-3">

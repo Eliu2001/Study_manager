@@ -18,3 +18,16 @@ export function formatGrade(value: number | null | undefined, decimals = 1): str
     maximumFractionDigits: decimals,
   })
 }
+
+/** Porcentaje sin decimales sobrantes: 35 -> "35", 33.33 -> "33,33". */
+export function formatPercent(value: number): string {
+  return value.toLocaleString('es-CL', { maximumFractionDigits: 2 })
+}
+
+/** Fecha de hoy en formato AAAA-MM-DD, según la zona horaria local. */
+export function todayIso(): string {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
