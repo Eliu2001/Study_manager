@@ -6,6 +6,41 @@ promedio necesario para aprobar, fechas académicas y recordatorios.
 - **Backend:** Java 21, Spring Boot, PostgreSQL (Docker) y migraciones con Flyway.
 - **Frontend:** React con TypeScript (Vite), Tailwind CSS, React Router y TanStack Query.
 
+## Capturas de la aplicación
+
+Las siguientes capturas muestran las pantallas principales del frontend:
+
+### Registro
+
+![Formulario de creación de cuenta, con validación de contraseña UTF-8](docs/images/Register.png)
+
+### Inicio de sesión
+
+![Formulario para iniciar sesión](docs/images/login.png)
+
+### Inicio y avisos
+
+![Página principal con el promedio acumulado y avisos pendientes](docs/images/Home.png)
+
+### Periodos académicos
+
+![Listado de periodos, sus fechas y promedio](docs/images/Periods.png)
+
+### Asignaturas
+
+![Asignaturas del periodo y estado de aprobación](docs/images/subjects%20.png)
+
+### Calificaciones y evaluaciones
+
+![Detalle de asignatura con notas, ponderaciones y evaluaciones](docs/images/Califications.png)
+
+### Fechas académicas
+
+![Listado de fechas académicas con opciones para filtrar, editar y eliminar](docs/images/datesx.png)
+
+Estas capturas ilustran la interfaz. Los resultados de las pruebas automatizadas y de la
+prueba de humo ejecutada están documentados en [el informe QA](docs/fixes/QA-EJECUCION.md).
+
 ## Requisitos
 
 - Java 21 (por ejemplo Temurin, con [SDKMAN](https://sdkman.io)). Usa siempre la última
