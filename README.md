@@ -26,6 +26,14 @@ Edita `.env`: cambia `DB_PASSWORD` y genera un secreto para `JWT_SECRET` (mínim
 por ejemplo con `openssl rand -base64 48`. El archivo `.env` está en `.gitignore` y no debe
 subirse al repositorio.
 
+`APP_TIME_ZONE` define la zona para calcular los días de los recordatorios; su valor por defecto
+es `America/Santiago`. No depende de la zona horaria del servidor.
+
+`DB_PORT=5433` selecciona el puerto local de PostgreSQL publicado por Docker y usado por
+el backend y las pruebas. Así puede coexistir con un PostgreSQL instalado en Windows en
+5432. Dentro del contenedor el puerto sigue siendo 5432. Si se omite `DB_PORT`, el backend
+usa 5432; para la configuración local de Compose, copiar también esta variable del ejemplo.
+
 ### 2. Base de datos
 
 ```bash
@@ -45,7 +53,7 @@ Flyway crea las tablas la primera vez.
 
 ```bash
 cd frontend
-pnpm install
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
@@ -69,8 +77,11 @@ con los tuyos. Se crea una sola vez:
 docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE ${POSTGRES_DB}_test"'
 ```
 
-Si PostgreSQL no está levantado, esas pruebas se saltan solas y `./mvnw test` sigue funcionando.
-Flyway migra la base de pruebas automáticamente.
+La disponibilidad para integración se comprueba mediante una conexión JDBC real a la base
+de pruebas, con `DB_USER` y `DB_PASSWORD`: un puerto abierto no basta. En modo local opcional,
+si esa conexión no está disponible se omiten las pruebas que requieren PostgreSQL.
+Con `TEST_DB_REQUIRED=true`, la falta de conexión hace fallar las pruebas en lugar de omitirlas;
+CI usa este modo obligatorio. Flyway migra la base de pruebas automáticamente.
 
 Con la aplicación en marcha también puedes ejecutar la prueba de humo, que recorre todos los
 endpoints (deja datos de prueba en tu base de datos):
@@ -79,9 +90,15 @@ endpoints (deja datos de prueba en tu base de datos):
 ./scripts/smoke-test.sh
 ```
 
-La integración continua (`.github/workflows/ci.yml`) compila y prueba backend y frontend en cada
-cambio, con una base PostgreSQL de servicio. Dependabot (`.github/dependabot.yml`) propone
-actualizaciones semanales, esperando 3 días tras cada publicación.
+La [integración continua](.github/workflows/ci.yml) se configura para cada push y pull request:
+Java 21 con Maven `verify` y PostgreSQL 16 de servicio; Node 24 con pnpm 11, instalación
+con lockfile congelado, lint, pruebas y build. El servicio crea `study_manager_test` y el backend
+usa `DB_NAME=study_manager` para resolver la base con sufijo `_test`. Solo usa credenciales
+desechables de CI, sin secretos de producción y con permiso `contents: read`.
+[Dependabot](.github/dependabot.yml) revisa Maven, npm/pnpm en `/frontend` y GitHub Actions
+semanalmente, con `cooldown.default-days: 3` para actualizaciones de versión, no de seguridad.
+La instalación conserva `minimumReleaseAge: 4320` (3 días) y no regenera el lockfile.
+La configuración no implica que las comprobaciones ya hayan pasado: revisar el resultado de Actions.
 
 ## API
 
@@ -111,6 +128,7 @@ recurso ajeno devuelve 404.
 | GET | `/api/summary` | Promedio acumulado de todos los periodos |
 
 Los `PUT` reemplazan el recurso completo: los campos que no se envían quedan vacíos.
+El registro no inicia sesión automáticamente: tras crear la cuenta hay que iniciar sesión.
 
 ## Reglas de notas
 
@@ -122,6 +140,7 @@ Los `PUT` reemplazan el recurso completo: los campos que no se envían quedan va
   ponderación pendiente, redondeado hacia arriba.
 - El promedio de periodos y el acumulado son ponderados por créditos solo si todas las asignaturas
   tienen créditos; si falta alguno, es un promedio simple.
+- Los créditos opcionales son enteros positivos, con máximo 32767 (tipo `Short` del backend).
 
 ## Seguridad
 
@@ -131,7 +150,14 @@ Los `PUT` reemplazan el recurso completo: los campos que no se envían quedan va
   al superarlo, la API responde 429 con la cabecera `Retry-After`. El conteo vive en memoria y se
   reinicia con la aplicación. Se ajusta con `app.login.*` en `application.properties`.
 - CORS abierto solo para el frontend (`CORS_ALLOWED_ORIGINS`, por defecto `http://localhost:5173`).
+- Detrás de un proxy inverso, usar el perfil `proxy` solo con un proxy de confianza y sin acceso
+  directo al backend; consultar el hallazgo 07 en el [índice de correcciones](docs/fixes/README.md).
 - Las respuestas de error no incluyen trazas ni detalles internos.
 - El token del frontend se guarda en `sessionStorage` (se borra al cerrar la pestaña).
 - Frontend con pnpm: espera de 3 días antes de instalar versiones nuevas, scripts de instalación de
   dependencias bloqueados y dependencias desde Git o URLs rechazadas (`frontend/pnpm-workspace.yaml`).
+
+## Correcciones documentadas
+
+El [índice de los 11 hallazgos](docs/fixes/README.md) reúne el alcance de cada corrección,
+sus comprobaciones y las precauciones de despliegue.

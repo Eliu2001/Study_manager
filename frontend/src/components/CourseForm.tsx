@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import type { Course, CourseInput } from '../api/courses'
+import { isValidCredits, MAX_CREDITS, MIN_CREDITS } from '../utils/credits'
 import { errorBoxClass, inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from './ui'
 
 type Props = {
@@ -21,6 +22,11 @@ export function CourseForm({ initial, submitLabel, isPending, error, onSubmit, o
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const parsedCredits = credits.trim() === '' ? null : Number(credits)
+    if (!isValidCredits(parsedCredits)) {
+      setLocalError(`Los créditos deben ser un número entero entre ${MIN_CREDITS} y ${MAX_CREDITS}.`)
+      return
+    }
     const grade = Number(passingGrade)
     if (!Number.isFinite(grade) || grade < 1 || grade > 7) {
       setLocalError('La nota de aprobación debe estar entre 1,0 y 7,0.')
@@ -30,7 +36,7 @@ export function CourseForm({ initial, submitLabel, isPending, error, onSubmit, o
     onSubmit({
       name: name.trim(),
       code: code.trim() === '' ? null : code.trim(),
-      credits: credits.trim() === '' ? null : Number(credits),
+      credits: parsedCredits,
       passingGrade: Math.round(grade * 10) / 10,
     })
   }
@@ -75,8 +81,8 @@ export function CourseForm({ initial, submitLabel, isPending, error, onSubmit, o
           <input
             id={`${id}-credits`}
             type="number"
-            min={1}
-            max={100}
+            min={MIN_CREDITS}
+            max={MAX_CREDITS}
             step={1}
             value={credits}
             onChange={(e) => setCredits(e.target.value)}

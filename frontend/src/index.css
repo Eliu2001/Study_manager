@@ -1,112 +1,91 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --color-slate-50: #f8f8f5;
+  --color-slate-100: #f1f2ed;
+  --color-slate-200: #e2e5dd;
+  --color-slate-300: #cbd1c5;
+  --color-slate-400: #968e85;
+  --color-slate-500: #746e66;
+  --color-slate-600: #5b564f;
+  --color-slate-700: #403d38;
+  --color-slate-800: #292b27;
+  --color-slate-900: #20221f;
+  --color-indigo-50: #edf4e9;
+  --color-indigo-200: #c1d7ae;
+  --color-indigo-500: #526f4d;
+  --color-indigo-600: #405b3b;
+  --color-indigo-700: #344b30;
+  --color-indigo-800: #293d27;
+  --color-amber-50: #fbf4e2;
+  --color-amber-800: #675524;
+  --color-green-50: #edf4e9;
+  --color-green-800: #344b30;
+  --color-red-50: #fbefec;
+  --color-red-300: #dfb1a5;
+  --color-red-700: #873e32;
+}
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  color: #292b27;
+  background: #f8f8f5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --color-peach: #ffcAB1;
+  --color-pearl: #ecDCB0;
+  --color-tea: #c1d7ae;
+  --color-willow: #8cc084;
+  --color-olive: #968e85;
+  --color-ink: #292b27;
+  --color-muted: #5b564f;
+  --color-surface: #ffffff;
+  --color-canvas: #f8f8f5;
+  --color-line: #e2e5dd;
+  --radius-card: 1rem;
+  --shadow-card: 0 2px 10px rgb(41 43 39 / 5%);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+* { box-sizing: border-box; }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
+html { min-width: 320px; min-height: 100%; }
 
 body {
+  min-width: 320px;
+  min-height: 100vh;
   margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
   font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  line-height: 1.6;
+}
+
+button, input, select, textarea { font: inherit; }
+
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+button:not(:disabled) { cursor: pointer; }
+
+:focus-visible {
+  outline: 3px solid #526f4d;
+  outline-offset: 3px;
+}
+
+h1, h2, h3, h4, p { margin-top: 0; }
+
+h1 { font-size: clamp(1.75rem, 4vw, 2rem); line-height: 1.2; letter-spacing: -0.035em; }
+h2 { line-height: 1.3; }
+
+#root { min-height: 100vh; }
+
+::selection { color: #20221f; background: #c1d7ae; }
+
+@media (prefers-reduced-motion: no-preference) {
+  a, button, input, select, textarea { transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

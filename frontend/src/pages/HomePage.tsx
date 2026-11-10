@@ -25,12 +25,12 @@ export function HomePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-slate-800">
+      <h1 className="mb-0 text-2xl font-semibold text-slate-800">
         {me.data ? `Hola, ${me.data.name}` : 'Hola'}
       </h1>
 
       <section className={cardClass}>
-        <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500">
+        <h2 className="mb-0 text-sm font-semibold text-slate-600">
           Promedio acumulado
         </h2>
         {overall.isPending && <p className="mt-2 text-slate-600">Cargando...</p>}
@@ -65,7 +65,7 @@ export function HomePage() {
       </section>
 
       <section className={cardClass}>
-        <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500">
+        <h2 className="mb-0 text-sm font-semibold text-slate-600">
           Avisos de hoy
         </h2>
         {upcoming.isPending && <p className="mt-2 text-slate-600">Cargando...</p>}
@@ -80,7 +80,7 @@ export function HomePage() {
             {upcoming.data.map((reminder) => (
               <li
                 key={reminder.reminderId}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-amber-50 px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-100 bg-amber-50 p-3 sm:p-4"
               >
                 <div>
                   <p className="font-medium text-slate-800">
@@ -96,7 +96,7 @@ export function HomePage() {
                   onClick={() => dismiss.mutate(reminder.reminderId)}
                   className={secondaryButtonClass}
                 >
-                  Entendido
+                  Marcar como visto
                 </button>
               </li>
             ))}

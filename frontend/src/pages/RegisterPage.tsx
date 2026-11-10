@@ -1,33 +1,39 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { useMutation } from '@tanstack/react-query'
-import { login, register, type RegisterData } from '../api/auth'
+import { register } from '../api/auth'
 import { ApiError } from '../api/client'
-import { useAuth } from '../auth/AuthContext'
 import { AuthLayout } from '../components/AuthLayout'
 import { buttonClass, inputClass, linkClass } from '../components/ui'
+import { validatePassword } from '../utils/password'
 
 export function RegisterPage() {
-  const { signIn } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
 
-  // Crea la cuenta e inicia sesión de inmediato; GuestRoute redirige al inicio.
+  // El registro confirmado no depende de un inicio de sesión posterior.
   const mutation = useMutation({
-    mutationFn: async (data: RegisterData) => {
-      await register(data)
-      return login({ email: data.email, password: data.password })
+    mutationFn: register,
+    retry: false,
+    onSuccess: () => {
+      setPassword('')
+      setConfirmation('')
     },
-    onSuccess: (data) => signIn(data.accessToken),
   })
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (mutation.isPending || mutation.isSuccess) return
     if (password !== confirmation) {
       setLocalError('Las contraseñas no coinciden.')
+      return
+    }
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      setLocalError(passwordError)
       return
     }
     setLocalError(null)
@@ -41,7 +47,7 @@ export function RegisterPage() {
       serverMessage = 'Ya existe una cuenta con ese correo.'
     } else if (error.status === 400) {
       serverMessage =
-        'Revisa los datos: el nombre y el correo son obligatorios y la contraseña debe tener entre 8 y 72 caracteres.'
+        'Revisa los datos: el nombre y el correo son obligatorios y la contraseña debe tener al menos 8 caracteres y como máximo 72 bytes en UTF-8. Las letras como ñ y los emojis pueden ocupar varios bytes.'
     } else {
       serverMessage = error.message
     }
@@ -49,6 +55,19 @@ export function RegisterPage() {
     serverMessage = 'Ocurrió un error inesperado. Inténtalo de nuevo.'
   }
   const message = localError ?? serverMessage
+
+  if (mutation.isSuccess) {
+    return (
+      <AuthLayout title="Cuenta creada">
+        <p role="status" className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+          Tu cuenta se creó correctamente. Inicia sesión para continuar; no necesitas volver a registrarte.
+        </p>
+        <Link to="/login" className={`${buttonClass} mt-6 block text-center`}>
+          Iniciar sesión
+        </Link>
+      </AuthLayout>
+    )
+  }
 
   return (
     <AuthLayout title="Crear cuenta">
@@ -95,12 +114,15 @@ export function RegisterPage() {
             autoComplete="new-password"
             required
             minLength={8}
-            maxLength={72}
+            aria-describedby="password-help"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-slate-500">Entre 8 y 72 caracteres.</p>
+          <p id="password-help" className="mt-1 text-xs text-slate-500">
+            Mínimo 8 caracteres y máximo 72 bytes en UTF-8. Una letra como ñ ocupa 2 bytes;
+            un emoji como 😀, 4 bytes.
+          </p>
         </div>
 
         <div>

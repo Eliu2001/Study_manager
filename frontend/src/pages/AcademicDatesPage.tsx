@@ -79,7 +79,7 @@ export function AcademicDatesPage() {
         evaluaciones se ven dentro de cada asignatura.
       </p>
 
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex min-h-11 items-center gap-3 text-sm text-slate-700">
         <input
           type="checkbox"
           checked={showPast}

@@ -59,7 +59,7 @@ export function TermsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-slate-800">Periodos</h1>
         {!creating && (
           <button
@@ -77,7 +77,7 @@ export function TermsPage() {
 
       {creating && (
         <section className={cardClass}>
-          <h2 className="mb-3 text-lg font-medium text-slate-800">Nuevo periodo</h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-800">Nuevo periodo</h2>
           <TermForm
             submitLabel="Crear periodo"
             isPending={createMutation.isPending}

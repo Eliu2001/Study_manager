@@ -6,21 +6,29 @@ import cl.germain.studymanager.assessment.AssessmentStatus;
 import cl.germain.studymanager.common.BusinessRuleException;
 import cl.germain.studymanager.common.ConflictException;
 import cl.germain.studymanager.common.ResourceNotFoundException;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ReminderService {
 
     private final ReminderRepository reminderRepository;
     private final AssessmentRepository assessmentRepository;
+    private final Clock reminderClock;
+
+    public ReminderService(ReminderRepository reminderRepository,
+                           AssessmentRepository assessmentRepository,
+                           @Qualifier("reminderClock") Clock reminderClock) {
+        this.reminderRepository = reminderRepository;
+        this.assessmentRepository = assessmentRepository;
+        this.reminderClock = reminderClock;
+    }
 
     @Transactional
     public ReminderResponse create(Long userId, Long assessmentId, ReminderRequest request) {
@@ -28,7 +36,8 @@ public class ReminderService {
         if (assessment.getDueDate() == null) {
             throw new BusinessRuleException("The assessment needs a due date before adding reminders");
         }
-        if (reminderRepository.countWithNotice(assessmentId, request.daysBefore()) > 0) {            throw new ConflictException(
+        if (reminderRepository.countWithNotice(assessmentId, request.daysBefore()) > 0) {
+            throw new ConflictException(
                     "A reminder with " + request.daysBefore() + " days of notice already exists");
         }
 
@@ -60,13 +69,13 @@ public class ReminderService {
         Reminder reminder = find(userId, id);
         if (!reminder.isSent()) {
             reminder.setSent(true);
-            reminder.setSentAt(Instant.now());
+            reminder.setSentAt(reminderClock.instant());
         }
     }
 
     @Transactional(readOnly = true)
     public List<ReminderNotification> upcoming(Long userId) {
-        return upcoming(userId, LocalDate.now());
+        return upcoming(userId, LocalDate.now(reminderClock));
     }
 
     List<ReminderNotification> upcoming(Long userId, LocalDate today) {

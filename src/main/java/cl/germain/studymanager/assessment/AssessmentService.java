@@ -5,6 +5,9 @@ import cl.germain.studymanager.common.ConflictException;
 import cl.germain.studymanager.common.ResourceNotFoundException;
 import cl.germain.studymanager.course.Course;
 import cl.germain.studymanager.course.CourseRepository;
+import cl.germain.studymanager.reminder.ReminderRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -21,10 +25,12 @@ public class AssessmentService {
 
     private final AssessmentRepository assessmentRepository;
     private final CourseRepository courseRepository;
+    private final EntityManager entityManager;
+    private final ReminderRepository reminderRepository;
 
     @Transactional
     public AssessmentResponse create(Long userId, Long courseId, AssessmentRequest request) {
-        Course course = findCourse(userId, courseId);
+        Course course = lockCourse(userId, courseId);
         BigDecimal othersWeight = zeroIfNull(assessmentRepository.sumWeightByCourseId(courseId));
         validate(request, courseId, null, othersWeight);
 
@@ -49,18 +55,43 @@ public class AssessmentService {
 
     @Transactional
     public AssessmentResponse update(Long userId, Long id, AssessmentRequest request) {
-        Assessment assessment = find(userId, id);
+        Assessment assessment = findForUpdate(userId, id);
         Long courseId = assessment.getCourse().getId();
         BigDecimal othersWeight = zeroIfNull(assessmentRepository.sumWeightByCourseIdExcluding(courseId, id));
         validate(request, courseId, id, othersWeight);
 
+        boolean dueDateChanged = !Objects.equals(assessment.getDueDate(), request.dueDate());
         apply(assessment, request);
+        if (dueDateChanged) {
+            reminderRepository.findAllByAssessmentId(id).forEach(reminder -> {
+                reminder.setSent(false);
+                reminder.setSentAt(null);
+            });
+        }
         return AssessmentResponse.from(assessment);
     }
 
     @Transactional
     public void delete(Long userId, Long id) {
-        assessmentRepository.delete(find(userId, id));
+        assessmentRepository.delete(findForUpdate(userId, id));
+    }
+
+    private Course lockCourse(Long userId, Long courseId) {
+        return courseRepository.findByIdAndTermUserIdForUpdate(courseId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course", courseId));
+    }
+
+    private Assessment findForUpdate(Long userId, Long id) {
+        Assessment assessment = find(userId, id);
+        lockCourse(userId, assessment.getCourse().getId());
+        // La primera lectura pudo ocurrir antes de esperar el bloqueo. Una segunda
+        // consulta devolvería la misma instancia obsoleta del contexto de persistencia.
+        try {
+            entityManager.refresh(assessment);
+        } catch (EntityNotFoundException exception) {
+            throw new ResourceNotFoundException("Assessment", id);
+        }
+        return assessment;
     }
 
     private Course findCourse(Long userId, Long courseId) {

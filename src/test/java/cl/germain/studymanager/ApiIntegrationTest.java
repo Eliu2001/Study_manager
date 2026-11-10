@@ -2,6 +2,8 @@ package cl.germain.studymanager;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -11,6 +13,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +35,10 @@ class ApiIntegrationTest {
 
     @Value("${local.server.port}")
     private int port;
+
+    @Autowired
+    @Qualifier("reminderClock")
+    private Clock reminderClock;
 
     private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
 
@@ -186,7 +194,7 @@ class ApiIntegrationTest {
     void remindersAppearWhenTheirNoticeWindowStarts() throws Exception {
         String token = newUserToken();
         String courseId = newCourse(token);
-        String dueDate = java.time.LocalDate.now().plusDays(2).toString();
+        String dueDate = LocalDate.now(reminderClock).plusDays(2).toString();
         String assessmentId = create("/api/courses/" + courseId + "/assessments", token,
                 "{\"name\":\"Prueba\",\"type\":\"SUMMATIVE\",\"weight\":50,\"dueDate\":\"" + dueDate + "\"}");
 
