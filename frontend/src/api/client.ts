@@ -44,9 +44,21 @@ function defaultMessage(status: number): string {
       return 'No se encontró lo que buscas.'
     case 409:
       return 'Ya existe un registro con esos datos.'
+    case 429:
+      return 'Demasiados intentos. Espera unos minutos antes de volver a intentarlo.'
     default:
       return 'Ocurrió un error inesperado. Inténtalo de nuevo.'
   }
+}
+
+/** El servidor indica cuánto esperar en la cabecera Retry-After (en segundos). */
+function tooManyRequestsMessage(response: Response): string {
+  const seconds = Number(response.headers.get('Retry-After'))
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return defaultMessage(429)
+  }
+  const minutes = Math.ceil(seconds / 60)
+  return `Demasiados intentos fallidos. Vuelve a intentarlo en ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
 }
 
 type RequestOptions = {
@@ -83,7 +95,9 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     onUnauthorized?.()
   }
   if (!response.ok) {
-    throw new ApiError(response.status, defaultMessage(response.status))
+    const message =
+      response.status === 429 ? tooManyRequestsMessage(response) : defaultMessage(response.status)
+    throw new ApiError(response.status, message)
   }
   if (response.status === 204) {
     return undefined as T

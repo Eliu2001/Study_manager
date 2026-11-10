@@ -2,6 +2,7 @@ package cl.germain.studymanager.auth;
 
 import cl.germain.studymanager.common.BusinessRuleException;
 import cl.germain.studymanager.security.JwtService;
+import cl.germain.studymanager.security.LoginAttemptService;
 import cl.germain.studymanager.user.User;
 import cl.germain.studymanager.user.UserRepository;
 import cl.germain.studymanager.user.UserResponse;
@@ -21,14 +22,17 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginAttemptService loginAttempts;
     private final String dummyHash;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       LoginAttemptService loginAttempts) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.loginAttempts = loginAttempts;
         this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
@@ -52,17 +56,30 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public LoginResponse login(LoginRequest request) {
-        if (exceedsBcryptLimit(request.password())) {
-            throw new InvalidCredentialsException();
-        }
-        User user = userRepository.findByEmail(normalize(request.email())).orElse(null);
-        String hash = user != null ? user.getPasswordHash() : dummyHash;
-        boolean passwordMatches = passwordEncoder.matches(request.password(), hash);
+    public LoginResponse login(LoginRequest request, String clientIp) {
+        String email = normalize(request.email());
 
-        if (user == null || !passwordMatches) {
+        // Se comprueba el bloqueo antes de gastar tiempo de CPU en BCrypt.
+        long secondsToWait = loginAttempts.secondsUntilAllowed(clientIp, email);
+        if (secondsToWait > 0) {
+            throw new TooManyLoginAttemptsException(secondsToWait);
+        }
+
+        boolean valid = false;
+        User user = null;
+        if (!exceedsBcryptLimit(request.password())) {
+            user = userRepository.findByEmail(email).orElse(null);
+            String hash = user != null ? user.getPasswordHash() : dummyHash;
+            // Aunque el correo no exista se compara contra un hash falso, para que el tiempo
+            // de respuesta no delate si la cuenta existe.
+            valid = passwordEncoder.matches(request.password(), hash) && user != null;
+        }
+
+        if (!valid) {
+            loginAttempts.recordFailure(clientIp, email);
             throw new InvalidCredentialsException();
         }
+        loginAttempts.recordSuccess(clientIp, email);
         return new LoginResponse(jwtService.generateToken(user), "Bearer", jwtService.expiresInSeconds());
     }
 
